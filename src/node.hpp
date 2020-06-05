@@ -10,6 +10,7 @@ class Node {
   public:
     T val;
     Node* next = nullptr;
+    Node* prev = nullptr;
     bool isPrime(){
       if ( val < 2 ) return false;
       if ( val == 2 ) return true;
