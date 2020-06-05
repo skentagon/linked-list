@@ -17,6 +17,10 @@ bool work(){
     if ( s == "n" ) break;
   }
 
+  std::cout << "Your linked list is: ";
+  list.print();
+  std::cout << std::endl;
+
   std::cout << "Sort ascending or descending (a or d)? " << std::flush;
   std::cin >> s;
   if ( s == "a" ){
@@ -28,6 +32,8 @@ bool work(){
   std::cout << "Your linked list is: ";
   list.print();
   std::cout << std::endl;
+
+  std::cout << "You have " << list.getPrimeNum() << " prime number(s) in your list." << std::endl;
 
   std::cout << "Do you want to do this again (y or n)? " << std::flush;
   std::cin >> s;

@@ -25,6 +25,13 @@ class Linked_List {
         std::cout << ptr->val << " ";
       }
     }
+    int getPrimeNum() const {
+      int cnt = 0;
+      for( Node<T>* ptr = head; ptr!=nullptr; ptr=ptr->next ){
+        if ( ptr->isPrime() ) ++cnt;
+      }
+      return cnt;
+    }
 
     unsigned int push_front( const T& v ){
       Node<T>* n = new Node<T>();
@@ -46,7 +53,6 @@ class Linked_List {
       } else {
         last->next = n;
         n->prev = last;
-        head->prev = n;
         last = n;
       }
       return ++length;
@@ -79,74 +85,106 @@ class Linked_List {
     void clear() { while(empty()){ pop_front(); } }
 
     void sort_ascending() {
-      sort_merge( 0, length, [](const T& a, const T&b){ return a<b; } );
+      if (empty()) return;
+      sort_merge( head, last/*, [](const T& a, const T&b){ return a<b; }*/ );
     }
     void sort_descending() {
-      sort_merge( 0, length, [](const T& a, const T&b){ return a>b; } );
+      sort_selection( head/*, [](const T& a, const T&b){ return a>b; }*/ );
     }
   private:
-    template<class Comp>
-    void sort_merge( Node<T>* first, Node<T>* last, Comp comp ){
-      if ( first == last ) return;
-      if ( first->next == last){
-        if ( first->val > last->val ){
-          first->prev->next = last;
-          last->next->prev = fist;
-          auto t1 = first->prev;
-          first->prev = last;
-          first->next = last->next;
-          last->prev = t1;
-          last->next = first;
+    Node<T>** refByPrev( Node<T>* p ){ return p->prev==nullptr ? &head : &(p->prev->next); }
+    Node<T>** refByNext( Node<T>* p ){ return p->next==nullptr ? &head : &(p->next->prev); }
+    void swap( Node<T>* first, Node<T>* second ){
+      if ( first->prev == nullptr ){
+        std::swap( head, second->prev->next );
+      } else if ( second->prev == nullptr ) {
+        std::swap( first->prev->next, head );
+      } else {
+        std::swap( first->prev->next, second->prev->next );
+      }
+      if ( first->next == nullptr ){
+        std::swap( last, second->next->prev );
+      } else if ( second->prev == nullptr ) {
+        std::swap( first->next->prev, last );
+      } else {
+        std::swap( first->next->prev, second->next->prev );
+      }
+      std::swap( first->prev, second->prev );
+      std::swap( first->next, second->next );
+      return;
+    }
+    //template<class Comp>
+    Node<T>* sort_merge( Node<T>* first, Node<T>* end/*, Comp comp*/ ){
+      if ( first == end ) {
+        first->prev = first->next = nullptr;
+        return last = first;
+      }
+      if ( first->next == end ){
+        if ( first->val > end->val ){
+          first->next = end->prev = nullptr;
+          first->prev = end;
+          last = end->next = first;
+          return end;
         }
-        return;
+        first->prev = end->next = nullptr;
+        last = first->next = end;
+        end->prev = first;
+        return first;
       }
       auto ptr1 = first;
-      auto ptr2 = last;
+      auto ptr2 = end;
       while(true){
+        if ( ptr1 == ptr2 || ptr1->next == ptr2 ){ break; }
         ptr1 = ptr1->next;
         ptr2 = ptr2->prev;
-        if ( ptr1 == ptr2 || ptr1->next == ptr2 ){ break; }
       }
-      sort_merge( first, ptr1 );
-      sort_merge( ptr1->next, last );
-      // merge
-      auto base = first->prev;
-      auto base1 = first;
-      auto base2 = pre1->next1;
+      auto base1_end = ptr1->next;
+      auto base1 = sort_merge( first, ptr1 );
+      auto base2 = sort_merge( base1_end, end );
+      auto base = base1->prev;
+      auto return_val = base1->val<base2->val ? base1 : base2;
       while(true){
-        if ( (base1->val < base2->val && base1 != ptr1->next) ||  base2 == ptr1->next ){
-          base->next = base1;
-          base1->prev = base->next;
-          base = base->next;
+        if ( base1 != nullptr && ( base2 == nullptr || base1->val < base2->val ) ){
+          if ( base != nullptr ) {
+            base->next = base1;
+          }
+          base1->prev = base;
+          base = base1;
           base1 = base1->next;
-        } else if ( base2 != ptr1->next ) {
-          base->next = base2;
-          base2->prev = base->next;
-          base = base->next;
+        } else if ( base2 != nullptr ) {
+          if ( base != nullptr ) {
+            base->next = base2;
+          } else {
+            head = base2;
+          }
+          base2->prev = base;
+          base = base2;
           base2 = base2->next;
         } else {
-          break;
+          base->next = nullptr;
+          last = base;
+          return return_val;
         }
       }
     }
-    template<class Comp>
-    void sort_selection( Comp comp ){
-      for( Node<T>* ptr = head; ptr!=nullptr; ptr=ptr->next ){
-        Node<T>* min = ptr;
-        for( Node<T>* dx = ptr; dx!=nullptr; dx=dx->next ){
-          if ( comp( min->val, dx->val ) ){
-            min = dx;
-          }
+    //template<class Comp>
+    void sort_selection( Node<T>* begin/*, Comp comp*/ ){
+      //print();
+      //std::cout << std::endl;
+      if ( begin == nullptr ) return;
+      auto max_ptr = begin;
+      for( Node<T>* ptr = begin; ptr!=nullptr; ptr=ptr->next ){
+        if ( max_ptr->val < ptr->val ){
+          max_ptr = ptr;
         }
-        if ( comp( ptr->val, min->next->val ) ) continue;
-        // swap;
-        //ptr = 
-        //min->next = 
       }
+      if ( max_ptr != begin ) swap( max_ptr, begin );
+      //std::cout << "swapped " << begin->val << " " << max_ptr->val << std::endl;
+      sort_selection( max_ptr->next );
     }
     unsigned int length;
-    Node<T>* head;
-    Node<T>* last;
+    Node<T>* head = nullptr;
+    Node<T>* last = nullptr;
 };
 
 #endif
